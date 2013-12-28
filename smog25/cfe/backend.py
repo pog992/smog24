@@ -1,7 +1,7 @@
 import StringIO
 import pickle
 
-from tornado import tcpserver
+from smog25.cfe import util
 
 
 class PickledStreamReader(object):
@@ -29,26 +29,16 @@ class PickledStreamReader(object):
                 self.callback(obj)
 
 
-class BackendConnection(object):
+class BackendConnection(util.Connection):
     def __init__(self, stream):
-        self.stream = stream
-        self.stream.set_close_callback(self.became_closed)
         self.reader = PickledStreamReader(self.object_received)
-        self.read_next_bytes()
+        super(BackendConnection, self).__init__(stream)
     
-    def read_next_bytes(self):
-        self.stream.read_bytes(4096, self.read_next_bytes, self.reader.feed)
+    def read(self):
+        self.stream.read_bytes(4096, self.read, self.reader.feed)
 
     def object_received(self, obj):
         print obj
 
-    def became_closed(self):
-        print 'closed.'
-
     def write_object(self, obj):
         self.stream.write(pickle.dumps(obj, pickle.HIGHEST_PROTOCOL))
-
-
-class BackendServer(tcpserver.TCPServer):
-    def handle_stream(self, stream, address):
-        BackendConnection(stream)
