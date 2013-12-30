@@ -1,0 +1,5 @@
+teams:
+    - [queueing, pass123]
+    - [Bum Bum City, "tra, "]
+
+ss_path: /var/run/db
