@@ -30,7 +30,9 @@ class PickledStreamReader(object):
 
 
 class BackendConnection(util.Connection):
-    def __init__(self, stream):
+    def __init__(self, stream, cfe):
+        self.cfe = cfe
+        cfe.add_backend(self)
         self.reader = PickledStreamReader(self.object_received)
         super(BackendConnection, self).__init__(stream)
     
@@ -38,7 +40,10 @@ class BackendConnection(util.Connection):
         self.stream.read_bytes(4096, self.read, self.reader.feed)
 
     def object_received(self, obj):
-        print obj
+        self.cfe.reply(self, obj)
 
     def write_object(self, obj):
         self.stream.write(pickle.dumps(obj, pickle.HIGHEST_PROTOCOL))
+
+    def became_closed(self):
+        self.cfe.remove_backend(self)
