@@ -6,27 +6,27 @@ from smog25.cfe import util
 
 class PickledStreamReader(object):
     def __init__(self, callback):
-        self.callback = callback
-        self.buffer = StringIO.StringIO()
+        self._callback = callback
+        self._buffer = StringIO.StringIO()
     
     def _append(self, data):
-        pos = self.buffer.tell()
-        self.buffer.seek(0, 2)
-        self.buffer.write(data)
-        self.buffer.seek(pos)
+        pos = self._buffer.tell()
+        self._buffer.seek(0, 2)
+        self._buffer.write(data)
+        self._buffer.seek(pos)
 
     def feed(self, data):
         self._append(data)
         while True:
-            pos = self.buffer.tell()
+            pos = self._buffer.tell()
             try:
-                obj = pickle.load(self.buffer)
+                obj = pickle.load(self._buffer)
             except (EOFError, ValueError):
-                self.buffer.seek(pos)
-                self.buffer = StringIO.StringIO(self.buffer.read())
+                self._buffer.seek(pos)
+                self._buffer = StringIO.StringIO(self._buffer.read())
                 break
             else:
-                self.callback(obj)
+                self._callback(obj)
 
 
 class BackendConnection(util.Connection):
